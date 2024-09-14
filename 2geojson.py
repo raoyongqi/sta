@@ -1,7 +1,7 @@
 import geopandas as gpd
 
 # 读取Shapefile
-shp_file_path = 'export2/export2.shp'
+shp_file_path =  'wsg84/wsg84.shp'
 gdf = gpd.read_file(shp_file_path)
 
 # 将数据保存为GeoJSON格式
