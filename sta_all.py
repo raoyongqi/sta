@@ -48,4 +48,25 @@ df.to_csv(output_csv_path, index=False)
 output_json_path = 'polygons.json'
 df.to_json(output_json_path, orient='records', force_ascii=False, indent=2)  # 使用'records'格式并保持格式化
 
-print(f"Top 2000 polygons saved to {output_csv_path} and {output_json_path}")
+print(f"polygons saved to {output_csv_path} and {output_json_path}")
+import json
+
+# 创建包含感兴趣数据的列表
+data = []
+for _, row in gdf_sorted.iterrows():
+    data.append({
+        'weight': int(row['area_km2']),  # 使用面积作为 weight，并确保为整数
+        'lnglat': [str(row['centroid_lon']), str(row['centroid_lat'])],
+        'name': row.get('Vegetation_2', '')  # 使用 'Vegetation_2' 列作为 name
+    })
+# 转换为 JavaScript 数组格式
+points_js = 'var points = [\n' + ',\n'.join(
+    f"    {{ weight: {item['weight']}, lnglat: [{item['lnglat'][0]}, {item['lnglat'][1]}], name: '{item['name']}' }}" 
+    for item in data
+) + '\n];'
+
+# 保存为 JavaScript 文件
+with open('points.js', 'w', encoding='utf-8') as f:
+    f.write(points_js)
+
+print("数据已保存为 points.js")
