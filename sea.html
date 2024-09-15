@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>区划聚合+海量点展示</title>
+    <style>
+        html, body, #container {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+        }
+        #loadingTip {
+            position: absolute;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            padding: 3px 10px;
+            background: red;
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<script>
+    window._AMapSecurityConfig = {
+      securityJsCode: "16f81296c450f8bb5149a86056dae9c8",
+    };
+  </script>
+    <script src="index.js"></script>
+
+<body>
+    <div id="container"></div>
+    <script>
+        const initMap = () => {
+  map = undefined;
+  const container = document.getElementById("map");
+  if (container) {
+    // 清除挂载点里面的内容，防止重复挂载
+    container.innerHTML = "";
+  }
+        AMapLoader.load({
+            "key": "514c99148afec38a187b745ddbd1e517",  // 申请好的Web端开发者Key
+            "version": "2.0",  // JSAPI 版本
+            "plugins": [],     // 不需要额外的地图插件时为空
+            "AMapUI": {        // 加载 AMapUI
+                "version": '1.1',  // AMapUI 版本
+                "plugins": ['geo/DistrictCluster', 'misc/PointSimplifier']  // 加载需要的 AMapUI 插件
+            },
+
+        }).then(() => {
+            // 创建地图实例
+            var map = new AMap.Map('container', {
+                zoom: 4
+            });
+
+            // 初始化页面
+            function initPage(DistrictCluster, PointSimplifier, $) {
+                var pointSimplifierIns = new PointSimplifier({
+                    map: map,
+                    autoSetFitView: false,
+                    zIndex: 110,
+                    getPosition: function(item) {
+                        if (!item) return null;
+                        var parts = item.split(',');
+                        return [parseFloat(parts[0]), parseFloat(parts[1])];
+                    },
+                    getHoverTitle: function(dataItem, idx) {
+                        return idx + ': ' + dataItem;
+                    },
+                    renderOptions: {
+                        pointStyle: {
+                            width: 6,
+                            height: 6,
+                            fillStyle: 'rgba(153, 0, 153, 0.38)'
+                        },
+                        hoverTitleStyle: {
+                            position: 'top'
+                        }
+                    }
+                });
+
+                var distCluster = new DistrictCluster({
+                    zIndex: 100,
+                    map: map,
+                    getPosition: function(item) {
+                        if (!item) return null;
+                        var parts = item.split(',');
+                        return [parseFloat(parts[0]), parseFloat(parts[1])];
+                    }
+                });
+
+                window.distCluster = distCluster;
+
+                function refresh() {
+                    var zoom = map.getZoom();
+                    var pointStyle = pointSimplifierIns.getRenderOptions().pointStyle;
+                    pointStyle.width = pointStyle.height = 2 * Math.pow(1.2, zoom - 3);
+                }
+
+                map.on('zoomend', refresh);
+                refresh();
+
+                $('<div id="loadingTip">加载数据，请稍候...</div>').appendTo(document.body);
+                $.get('https://a.amap.com/amap-ui/static/data/10w.txt', function(csv) {
+                    $('#loadingTip').remove();
+                    var data = csv.split('\n');
+                    distCluster.setData(data);
+                    pointSimplifierIns.setData(data);
+                });
+            }
+            AMapUI.load(['ui/geo/DistrictCluster', 'ui/misc/PointSimplifier', 'lib/$'], function(DistrictCluster, PointSimplifier, $) {
+                initPage(DistrictCluster, PointSimplifier, $);
+            });
+
+        }).catch(e => {
+            console.error("地图加载失败", e);
+        });}
+        initMap();
+
+    </script>
+</body>
+
+</html>
