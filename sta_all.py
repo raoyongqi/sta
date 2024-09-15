@@ -76,12 +76,12 @@ data = []
 for _, row in gdf_sorted.iterrows():
     data.append({
         'weight': int(row['area_km2']),  # 使用面积作为 weight，并确保为整数
-        'lnglat': [str(row['centroid_lat']), str(row['centroid_lon'])],
+        'latlng': [str(row['centroid_lat']), str(row['centroid_lon'])],
         'name': row.get('Vegetation_2', '')  # 使用 'Vegetation_2' 列作为 name
     })
 # 转换为 JavaScript 数组格式
-points_js = 'var points = [\n' + ',\n'.join(
-    f"    {{ weight: {item['weight']}, lnglat: [{item['lnglat'][0]}, {item['lnglat'][1]}], name: '{item['name']}' }}" 
+points_js = 'export var markersData = [\n' + ',\n'.join(
+    f"    {{ weight: {item['weight']}, position: [{item['latlng'][0]}, {item['latlng'][1]}] }}" 
     for item in data
 ) + '\n];'
 
